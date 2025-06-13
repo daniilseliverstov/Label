@@ -1,17 +1,14 @@
+from PIL.ImageChops import offset
 from openpyxl import Workbook
-from openpyxl.styles import Border, Side
+from openpyxl.styles import Border, Side, Alignment, Font
+from openpyxl.drawing.image import Image
+from sizes import row_heights, col_widths
+from datetime import datetime, timedelta
 
 # Создаем рабочий лист
 wb = Workbook()
 ws = wb.active
 
-
-# Задаем параметры высот и широт ячеек
-row_heights = {1: 13.5, 2: 12.75, 3: 12.75, 4: 13.5, 5: 12.75, 6: 12.75, 7: 12.75, 8: 13.5, 9: 12.75,
-              10: 12.75, 11: 12.75, 12: 13.5, 13: 12.75, 14: 12.75, 15: 12.75, 16: 13.5, 17: 6.75}
-
-col_widths = {"A":8.36, "B":8.36, "C": 8.36, "D": 8.36, "E": 9.07, "F": 8.36, "G": 9.65, "H": 8.36, "I": 9.22, "J": 8.36,
-              "K": 8.36, "L": 12.22, "M": 11.22, "N": 8.36, "O": 12.94, "P": 6.65, "Q": 8.36, "R": 17.65, "S": 4.07}
 # Устанавливаем высоту строк
 for row, height in row_heights.items():
     ws.row_dimensions[row].height = height
@@ -21,7 +18,7 @@ for col, width in col_widths.items():
 
 
 # Задаем данные для объединения ячеек
-merge_ranges = ["A1:E8", "A9:B12", "C9:E12", "A13:E16", "F1:L4", "M1:O4", "P1:R4", "S1:S16", "F5:I8", "G5:L8", "M5:O8",
+merge_ranges = ["A1:E8", "A9:B12", "C9:E12", "A13:E16", "F1:L4", "M1:O4", "P1:R4", "S1:S16", "F5:I8", "J5:L8", "M5:O8",
                 "P5:R8", "F9:I12", "J9:L12", "M9:O12", "P9:R12", "F13:G14", "H13:I14", "J13:K14", "F15:G16", "H15:I16",
                 "J15:K16", "L13:M16", "N13:N16", "O13:O16", "P13:R16"]
 
@@ -47,5 +44,105 @@ for merge_range in merge_ranges:
         for col in range(ord(col_start), ord(col_end) + 1):
             cell = ws[f"{chr(col)}{row}"]
             cell.border = thick_border
+
+# Загружаем изображения
+kodmi = Image("images/Logo.png")
+eac = Image("images/EAC.png")
+contacts = Image("images/Contacts.png")
+
+
+# Задаем размеры изображений
+kodmi.width = 323.62
+kodmi.height = 108.4615384615385
+eac.width = 77.214
+eac.height = 61.53856
+contacts.width = 193.035
+contacts.height = 65.38455
+
+# Вставляем изображения
+ws.add_image(kodmi, "A2")
+ws.add_image(eac, "A9")
+ws.add_image(contacts, "C9")
+
+# Вставляем текст в ячейку
+ws["A13"] = "ГОСТ 16371-2014"
+
+# Задаем шрифт, высоту текста
+font = Font(name="Times New Roman", size=16, bold=True)
+ws["A13"].font = font
+# Выравниваем текст по центру
+alignment = Alignment(horizontal="center", vertical="center")
+ws["A13"].alignment = alignment
+
+ws["F5"] = "Наименование упаковки"
+font = Font(name="Times New Roman", size=16, bold=True)
+ws["F5"].font = font
+alignment = Alignment(horizontal="center", vertical="center")
+ws["F5"].alignment = alignment
+
+ws["J5"] = "Цвет"
+font = Font(name="Times New Roman", size=20, bold=True)
+ws["J5"].font = font
+alignment = Alignment(horizontal="center", vertical="center")
+ws["J5"].alignment = alignment
+
+ws["M5"] = "ЗАКАЗЧИК"
+font = Font(name="Times New Roman", size=20, bold=True)
+ws["M5"].font = font
+alignment = Alignment(horizontal="center", vertical="center")
+ws["M5"].alignment = alignment
+
+ws["P1"] = "ВСЕГО УПАКОВОК"
+font = Font(name="Times New Roman", size=14, bold=True)
+ws["P1"].font = font
+alignment = Alignment(horizontal="center", vertical="center")
+ws["P1"].alignment = alignment
+
+ws["P9"] = "№ УПАКОВКИ"
+font = Font(name="Times New Roman", size=14, bold=True)
+ws["P9"].font = font
+alignment = Alignment(horizontal="center", vertical="center")
+ws["P9"].alignment = alignment
+
+ws["F13"] = "ВЫСОТА"
+font = Font(name="Times New Roman", size=14, bold=True)
+ws["F13"].font = font
+alignment = Alignment(horizontal="center", vertical="center")
+ws["F13"].alignment = alignment
+
+ws["H13"] = "ШИРИНА"
+font = Font(name="Times New Roman", size=14, bold=True)
+ws["H13"].font = font
+alignment = Alignment(horizontal="center", vertical="center")
+ws["H13"].alignment = alignment
+
+ws["J13"] = "ГЛУБИНА"
+font = Font(name="Times New Roman", size=14, bold=True)
+ws["J13"].font = font
+alignment = Alignment(horizontal="center", vertical="center")
+ws["J13"].alignment = alignment
+
+ws["L13"] = "ВЕС"
+font = Font(name="Times New Roman", size=14, bold=True)
+ws["L13"].font = font
+alignment = Alignment(horizontal="center", vertical="center")
+ws["L13"].alignment = alignment
+
+ws["O13"] = "КГ"
+font = Font(name="Times New Roman", size=14, bold=True)
+ws["O13"].font = font
+alignment = Alignment(horizontal="center", vertical="center")
+ws["O13"].alignment = alignment
+
+# Получаем дату и форматируем
+today = datetime.now()
+_date = today + timedelta(days=7)
+label_date = _date.strftime("%d.%m.%Y")
+
+ws["S1"] = label_date
+font = Font(name="Times New Roman", size=14, bold=True)
+ws[""].font = font
+alignment = Alignment(horizontal="center", vertical="center")
+ws[""].alignment = alignment
 
 wb.save("label.xlsx")
