@@ -29,12 +29,9 @@ def get_col_widths(file_path, sheet_name):
     return col_widths
 
 
-# Пример использования
-file_path = 'этикетка.xlsx'  # Замените на путь к вашему файлу
-sheet_name = 'Лист1'  # Замените на имя вашего листа
+# Применяем к шаблону этикеток
+file_path = 'этикетка.xlsx'
+sheet_name = 'Лист1'
 
 row_heights = get_row_heights(file_path, sheet_name)
 col_widths = get_col_widths(file_path, sheet_name)
-
-print(row_heights)
-print(col_widths)
