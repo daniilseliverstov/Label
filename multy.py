@@ -7,9 +7,33 @@ from sizes import row_heights, col_widths
 
 
 class Label:
+
+    """
+        Класс для создания одной этикетки в Excel-листе.
+
+        Атрибуты:
+            ROWS_PER_LABEL (int): Количество строк, занимаемых одной этикеткой.
+            ws (Worksheet): Рабочий лист openpyxl, на котором создаётся этикетка.
+            start_row (int): Начальная строка для размещения этикетки.
+            row_offset (int): Смещение строк относительно начала листа.
+
+        Методы:
+            create(): Создаёт этикетку, применяя размеры строк, объединения ячеек, границы,
+                      вставку изображений, текст и дату.
+        """
+
     ROWS_PER_LABEL = 17
 
     def __init__(self, ws, start_row):
+
+        """
+        Инициализация объекта Label.
+
+            Args:
+                ws (Worksheet): Объект рабочего листа openpyxl.
+                start_row (int): Начальная строка для размещения этикетки.
+        """
+
         self.ws = ws
         self.start_row = start_row
         self.row_offset = start_row - 1
@@ -52,10 +76,21 @@ class Label:
         )
 
     def _apply_row_heights(self):
+
+        """
+        Применяет заданные высоты строк к диапазону строк этикетки с учётом смещения.
+        """
+
         for r, h in row_heights.items():
             self.ws.row_dimensions[r + self.row_offset].height = h
 
     def _apply_merge_and_borders(self):
+
+        """
+        Объединяет ячейки в указанных диапазонах и применяет толстые границы ко всем ячейкам этих диапазонов.
+        Смещает диапазоны по строкам в соответствии с позицией этикетки.
+        """
+
         for merge_range in self.merge_ranges:
             start_cell, end_cell = merge_range.split(':')
             start_col_letter, start_row = coordinate_from_string(start_cell)
@@ -75,6 +110,12 @@ class Label:
                     cell.border = self.thick_border
 
     def _insert_images(self):
+
+        """
+        Вставляет изображения в указанные ячейки с заданными размерами,
+        учитывая смещение по строкам для текущей этикетки.
+        """
+
         for path, cell, width, height in self.images_info:
             col_letter, row_num = coordinate_from_string(cell)
             new_row = row_num + self.row_offset
@@ -85,6 +126,12 @@ class Label:
             self.ws.add_image(img, new_cell)
 
     def _set_text_cells(self):
+
+        """
+        Заполняет указанные ячейки текстом и применяет к ним заданное форматирование (шрифт и выравнивание),
+        с учётом смещения по строкам.
+        """
+
         for cell, text, font in self.text_cells:
             col_letter, row_num = coordinate_from_string(cell)
             new_row = row_num + self.row_offset
@@ -94,6 +141,12 @@ class Label:
             self.ws[new_cell].alignment = self.center_alignment
 
     def _set_date(self):
+
+        """
+        Устанавливает дату (текущая дата + 7 дней) в ячейку столбца S первой строки этикетки.
+        Применяет шрифт и вертикальный поворот текста.
+        """
+
         date_cell = f"S{1 + self.row_offset}"
         label_date = (datetime.now() + timedelta(days=7)).strftime("%d.%m.%Y")
         self.ws[date_cell] = label_date
@@ -103,6 +156,13 @@ class Label:
         )
 
     def create(self):
+
+        """
+        Основной метод создания этикетки.
+        Выполняет применение высоты строк, объединение ячеек и границ,
+        вставку изображений, добавление текста и установку даты.
+        """
+
         self._apply_row_heights()
         self._apply_merge_and_borders()
         self._insert_images()
@@ -111,16 +171,43 @@ class Label:
 
 
 class LabelSheet:
+
+    """
+    Класс для создания Excel-файла с несколькими этикетками.
+
+    Атрибуты:
+        label_count (int): Количество этикеток для создания.
+        wb (Workbook): Объект книги Excel.
+        ws (Worksheet): Активный лист книги Excel.
+
+    Методы:
+        create_labels(): Создаёт все этикетки на листе.
+        save(filename): Сохраняет книгу Excel в файл с указанным именем.
+    """
+
     def __init__(self, label_count):
+
+        """
+        Инициализация объекта LabelSheet.
+        Args:
+            label_count (int): Количество этикеток для создания.
+        """
+
         self.label_count = label_count
         self.wb = Workbook()
         self.ws = self.wb.active
 
     def _set_column_widths(self):
+        """
+        Устанавливает ширину столбцов согласно заданным параметрам из col_widths.
+        """
         for col, width in col_widths.items():
             self.ws.column_dimensions[col].width = width
 
     def create_labels(self):
+        """
+        Создает все этикетки, размещая их друг под другом на листе.
+        """
         self._set_column_widths()
         for i in range(self.label_count):
             start_row = 1 + i * Label.ROWS_PER_LABEL
@@ -128,10 +215,23 @@ class LabelSheet:
             label.create()
 
     def save(self, filename):
+        """
+        Сохраняет книгу Excel в файл.
+
+        Args:
+            filename (str): Имя файла для сохранения.
+        """
         self.wb.save(filename)
 
 
 def main():
+    """
+    Основная функция программы.
+
+    Запрашивает у пользователя количество этикеток для создания,
+    создает соответствующий Excel-файл с этикетками и сохраняет его.
+    Обрабатывает ошибочные вводы.
+    """
     try:
         n = int(input("Введите количество этикеток: "))
         if n < 1:
