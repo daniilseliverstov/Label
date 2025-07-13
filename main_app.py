@@ -1,6 +1,8 @@
 import sys
 import os
 import re
+import json
+from pathlib import Path
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 
@@ -18,6 +20,8 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFont
+
+import order_search
 
 
 # Классы из order_search.py
@@ -431,6 +435,8 @@ class LabelSheet:
 
 
 class MainWindow(QMainWindow):
+    CONFIG_FILE = "label_generator_config.json"
+
     def __init__(self):
         super().__init__()
         self.setWindowTitle("Генератор этикеток")
@@ -441,8 +447,32 @@ class MainWindow(QMainWindow):
         self.label_types = ["КОРПУС", "ФАСАДЫ МДФ", "ФАСАДЫ ПЛАСТИК", "Профиль/доп элемент", "ОРГАЛИТ"]
         self.labels_to_create = []
 
+        # Загружаем настройки при запуске
+        self.load_settings()
+
         self.init_ui()
         self.setup_connections()
+
+    def load_settings(self):
+        """Загружает настройки из файла конфигурации"""
+        try:
+            if os.path.exists(self.CONFIG_FILE):
+                with open(self.CONFIG_FILE, 'r', encoding='utf-8') as f:
+                    config = json.load(f)
+                    self.excel_file_path = config.get('excel_file_path', '')
+        except Exception as e:
+            print(f"Ошибка загрузки настроек: {e}")
+
+    def save_settings(self):
+        """Сохраняет текущие настройки в файл конфигурации"""
+        try:
+            config = {
+                'excel_file_path': self.excel_file_path
+            }
+            with open(self.CONFIG_FILE, 'w', encoding='utf-8') as f:
+                json.dump(config, f, ensure_ascii=False, indent=4)
+        except Exception as e:
+            print(f"Ошибка сохранения настроек: {e}")
 
     def init_ui(self):
         self.central_widget = QWidget()
@@ -457,6 +487,7 @@ class MainWindow(QMainWindow):
 
         self.file_path_edit = QLineEdit()
         self.file_path_edit.setPlaceholderText("Укажите путь к файлу раскроя...")
+        self.file_path_edit.setText(self.excel_file_path or "")  # Устанавливаем сохраненный путь
         file_layout.addWidget(self.file_path_edit)
 
         self.browse_btn = QPushButton("Обзор...")
@@ -535,13 +566,14 @@ class MainWindow(QMainWindow):
         file_path, _ = QFileDialog.getOpenFileName(
             self,
             "Выберите файл раскроя",
-            "",
+            str(Path(self.excel_file_path).parent if self.excel_file_path else ""),  # Начинаем с последней папки
             "Excel Files (*.xlsx *.xls)"
         )
 
         if file_path:
             self.file_path_edit.setText(file_path)
             self.excel_file_path = file_path
+            self.save_settings()  # Сохраняем новый путь
 
     def search_order(self):
         order_number = self.order_number_edit.text().strip()
@@ -662,11 +694,13 @@ class MainWindow(QMainWindow):
             'package_total': total_labels
         }
 
+        order_number = self.order_number_edit.text().strip() or "Этикетки"
+
         # Запрашиваем путь для сохранения
         file_path, _ = QFileDialog.getSaveFileName(
             self,
             "Сохранить файл этикеток",
-            "multylabel.xlsx",
+            f" {order_number} Этикетки.xlsx",
             "Excel Files (*.xlsx)"
         )
 
@@ -691,6 +725,11 @@ class MainWindow(QMainWindow):
 
     def show_info(self, message):
         QMessageBox.information(self, "Информация", message)
+
+    def closeEvent(self, event):
+        """Сохраняем настройки при закрытии приложения"""
+        self.save_settings()
+        event.accept()
 
 
 if __name__ == "__main__":

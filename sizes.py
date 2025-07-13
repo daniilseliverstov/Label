@@ -1,42 +1,4 @@
-from openpyxl import load_workbook
 
-
-def get_row_heights(file_path, sheet_name):
-    # Загружаем рабочую книгу
-    wb = load_workbook(filename=file_path, data_only=True)
-    ws = wb[sheet_name]
-
-    # Получаем высоты строк
-    row_heights = {}
-    for row in ws.row_dimensions:
-        # row_dimensions индексируется с 1
-        row_heights[row] = ws.row_dimensions[row].height
-
-    return row_heights
-
-
-def get_col_widths(file_path, sheet_name):
-    # Загружаем рабочую книгу
-    wb = load_workbook(filename=file_path, data_only=True)
-    ws = wb[sheet_name]
-
-    # Получаем ширины столбцов
-    col_widths = {}
-    for col in ws.column_dimensions:
-        # column_dimensions индексируется буквами
-        col_widths[col] = ws.column_dimensions[col].width
-
-    return col_widths
-
-
-# Применяем к шаблону этикеток
-file_path = 'этикетка.xlsx'
-sheet_name = 'КОРПУС МНОГО (2)'
-
-row_heights = get_row_heights(file_path, sheet_name)
-col_widths = get_col_widths(file_path, sheet_name)
-print(row_heights)
-print((col_widths))
 row_heights = {1: 13.5, 2: 12.75, 3: 12.75, 4: 13.5, 5: 12.75, 6: 12.75, 7: 12.75, 8: 13.5, 9: 12.75, 10: 12.75,
                11: 12.75, 12: 13.5, 13: 12.75, 14: 12.75, 15: 12.75, 16: 13.5, 17: 6.75, 18: 13.5, 19: 12.75,
                20: 12.75, 21: 13.5, 22: 12.75, 23: 12.75, 24: 12.75, 25: 13.5, 26: 12.75, 27: 12.75, 28: 12.75, 29: 13.5,
