@@ -149,8 +149,6 @@ class OrderInfo:
 
 # Константы для размеров ячеек
 from sizes import row_heights, col_widths
-#row_heights = {i: 12.75 for i in range(1, 18)}
-#col_widths = {chr(65 + i): 11.36 for i in range(19)}  # A-S columns
 
 
 class LabelEditorDialog(QDialog):
@@ -177,16 +175,17 @@ class LabelEditorDialog(QDialog):
         self.order_number_edit = QLineEdit(self.label_data['order_number'])
 
         # Определяем значение для компонента
-        if self.label_data['label_type'].upper() == "КОРПУС":
+        label_type = self.label_data['label_type'].upper()
+        if label_type == "КОРПУС":
             component_value = self.label_data['carcase']
-        elif self.label_data['label_type'].upper() == "ОРГАЛИТ":
+        elif label_type == "ОРГАЛИТ":
             component_value = "БЕЛЫЙ"
-        elif self.label_data['label_type'].upper() == "ФАСАДЫ МДФ" or "ФАСАДЫ ПЛАСТИК":
-            component_value = self.label_data.get('facade')
+        elif label_type in ["ФАСАДЫ МДФ", "ФАСАДЫ ПЛАСТИК"]:
+            component_value = self.label_data.get('facade', '')
         else:
             component_value = self.label_data.get('extra_component', '')
 
-        self.component_edit = QLineEdit(component_value)
+        self.component_edit = QLineEdit(str(component_value) if component_value is not None else "")
 
         # Добавляем поля в форму
         layout.addRow("Наименование изделия:", self.item_name_edit)
@@ -228,10 +227,13 @@ class LabelEditorDialog(QDialog):
         self.label_data['order_number'] = self.order_number_edit.text()
 
         # Обновляем компонент в зависимости от типа этикетки
-        if self.label_data['label_type'].upper() == "КОРПУС":
+        label_type = self.label_data['label_type'].upper()
+        if label_type == "КОРПУС":
             self.label_data['carcase'] = self.component_edit.text()
-        elif self.label_data['label_type'].upper() == "ОРГАЛИТ":
+        elif label_type == "ОРГАЛИТ":
             pass  # Оставляем "БЕЛЫЙ"
+        elif label_type in ["ФАСАДЫ МДФ", "ФАСАДЫ ПЛАСТИК"]:
+            self.label_data['facade'] = self.component_edit.text()
         else:
             self.label_data['extra_component'] = self.component_edit.text()
 
@@ -313,10 +315,13 @@ class Label:
         dimensions = data.get('dimensions', (0, 0, 0))
 
         # Определяем значение для J9
-        if data['label_type'].upper() == "КОРПУС":
+        label_type = data['label_type'].upper()
+        if label_type == "КОРПУС":
             j9_value = data['carcase']
-        elif data['label_type'].upper() == "ОРГАЛИТ":
+        elif label_type == "ОРГАЛИТ":
             j9_value = "БЕЛЫЙ"
+        elif label_type in ["ФАСАДЫ МДФ", "ФАСАДЫ ПЛАСТИК"]:
+            j9_value = data.get('facade', '')
         else:
             j9_value = data.get('extra_component', '')
 
@@ -332,7 +337,7 @@ class Label:
             ("H15", str(dimensions[0]) if len(dimensions) > 0 else "", 14),
             ("J15", str(dimensions[2]) if len(dimensions) > 2 else "", 14),
             ("N13", str(int(data['weight'])) if data.get('weight') else "", 14),
-            ("M1", f"№ {data.get('order_number', '')}", 20),  # Исправлено: используем order_number
+            ("M1", f"№ {data.get('order_number', '')}", 20),
             ("M9", m9_text, 14),
             ("P5", str(data.get('package_total', 1)), 20),
             ("P13", str(data.get('package_num', 1)), 20),
@@ -405,6 +410,7 @@ class LabelSheet:
                     'client': label_info['client'],
                     'carcase': label_info['carcase'],
                     'extra_component': label_info['extra_component'],
+                    'facade': label_info.get('facade', ''),
                     'order_number': label_info['order_number'],
                     'package_total': self.labels_data['package_total'],
                     'package_num': package_num
@@ -433,7 +439,7 @@ class MainWindow(QMainWindow):
         self.excel_file_path = None
         self.order_info = None
         self.label_types = ["КОРПУС", "ФАСАДЫ МДФ", "ФАСАДЫ ПЛАСТИК", "Профиль/доп элемент", "ОРГАЛИТ"]
-        self.labels_to_create = []  # Теперь список словарей с полной информацией
+        self.labels_to_create = []
 
         self.init_ui()
         self.setup_connections()
@@ -581,6 +587,7 @@ class MainWindow(QMainWindow):
             'client': getattr(self.order_info, 'client', ''),
             'carcase': getattr(self.order_info, 'carcase', ''),
             'extra_component': getattr(self.order_info, 'extra_component', ''),
+            'facade': getattr(self.order_info, 'facade', ''),
             'order_number': self.order_number_edit.text().strip(),
         }
 
